@@ -22,6 +22,6 @@ Times in UTC. Build window: 3 Nov 16:00 to 8 Nov 23:00 (lablab schedule). Each d
 
 ## Risks we already know
 
-- The gift code arrives at kickoff. Until then no Vultr resources exist.
+- The gift code arrives at kickoff. Until then no Vultr resources exist. The Vultr account is already open (1 Nov 2026) and the hackathon promo billing page (`console.vultr.com/billing/?promo=HACKATHON`) offers "Gift Code" as the verification method, so kickoff does not wait on a card.
 - gVisor on a small VM can be slow to start containers; if a run takes too long to start, keep gVisor and pre-warm one container per run slot, never fall back to the default runtime.
 - Model ids on Serverless Inference can change; read `/v1/models` at kickoff and pin the ids in config.
