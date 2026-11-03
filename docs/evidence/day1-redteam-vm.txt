@@ -1,0 +1,27 @@
+# 2026-11-03T16:57:36Z on leakproof, runsc version release-20261102.0, Docker version 29.9.2, build a82e528
+collecting ... collected 21 items
+
+tests/test_containment.py::test_network_exfiltration_is_blocked PASSED   [  4%]
+tests/test_containment.py::test_network_exfiltration_without_control_gets_out PASSED [  9%]
+tests/test_containment.py::test_secret_hunt_finds_nothing PASSED         [ 14%]
+tests/test_containment.py::test_secret_hunt_finds_the_key_where_it_lives PASSED [ 19%]
+tests/test_containment.py::test_fork_bomb_stopped_by_pids_limit PASSED   [ 23%]
+tests/test_containment.py::test_fork_bomb_without_pids_limit_runs_until_the_clock PASSED [ 28%]
+tests/test_containment.py::test_memory_balloon_stopped_by_oom PASSED     [ 33%]
+tests/test_containment.py::test_memory_balloon_without_limit_completes PASSED [ 38%]
+tests/test_containment.py::test_infinite_loop_stopped_by_wall_clock PASSED [ 42%]
+tests/test_containment.py::test_host_stays_healthy_after_attacks PASSED  [ 47%]
+tests/test_containment.py::test_no_state_carries_between_runs PASSED     [ 52%]
+tests/test_containment.py::test_no_leftover_containers_or_mounts PASSED  [ 57%]
+tests/test_containment.py::test_runs_under_gvisor_not_the_host_kernel PASSED [ 61%]
+tests/test_containment.py::test_default_runtime_would_share_the_host_kernel PASSED [ 66%]
+tests/test_containment.py::test_root_filesystem_and_inputs_are_read_only PASSED [ 71%]
+tests/test_containment.py::test_receipt_is_complete_and_reproducible PASSED [ 76%]
+tests/test_datagen.py::test_same_seed_same_bytes PASSED                  [ 80%]
+tests/test_datagen.py::test_seeded_counts PASSED                         [ 85%]
+tests/test_datagen.py::test_reference_solution_matches_answer_key PASSED [ 90%]
+tests/test_datagen.py::test_decoys_are_real_traps PASSED                 [ 95%]
+tests/test_datagen.py::test_injection_cell_present PASSED                [100%]
+
+======================== 21 passed in 73.46s (0:01:13) =========================
+leftovers=0

@@ -1,18 +1,20 @@
 # Demo data
 
-Written 1 November 2026. The generator will be written during the build window.
+Written 1 November 2026; updated 3 November 2026 with the generator as built (`leakproof/datagen.py`, seed `20261103`). Run `python -m leakproof.datagen --out data/demo`.
 
 No real customer data is used anywhere. The demo exports are synthetic, produced by a seeded generator (same seed, same files, same hashes), with column names shaped like common exports so the agent faces the same mess it would face in real life: different id formats, dates in two formats, amounts in cents in one file and decimals in the other, status words that do not match.
 
 ## Files
 
-| File | Shaped like | Rows (target) |
+| File | Shaped like | Rows (seed 20261103) |
 |---|---|---|
-| `gateway_invoices.csv` | a payment gateway invoice export: `id`, `customer_email`, `subscription`, `status` (`draft`, `open`, `paid`, `void`, `uncollectible`), `amount_due` in cents, `currency`, `created`, `due_date`, `period_start`, `period_end` | ~1,200 |
-| `gateway_charges.csv` | the gateway's charge export: `id`, `invoice`, `amount` in cents, `status`, `created`, `refunded` | ~1,300 |
-| `gateway_subscriptions.csv` | `id`, `customer_email`, `status` (`active`, `past_due`, `canceled`), `canceled_at` | ~300 |
-| `billing_invoices.csv` | a billing system export: `invoiceid`, `userid`, `email`, `status` (`Paid`, `Unpaid`, `Cancelled`, `Refunded`), `total` as decimal, `duedate` as DD/MM/YYYY, `datepaid` | ~1,100 |
-| `billing_services.csv` | `serviceid`, `userid`, `domain`, `status` (`Active`, `Suspended`, `Terminated`), `nextduedate`, `billingcycle` | ~280 |
+| `gateway_invoices.csv` | a payment gateway invoice export: `id`, `customer_email`, `subscription`, `status` (`open`, `paid`, `void`), `amount_due` in cents, `currency`, `created`, `due_date`, `period_start`, `period_end` (unix seconds) | 1,713 |
+| `gateway_charges.csv` | the gateway's charge export: `id`, `invoice`, `amount` in cents, `status` (`succeeded`, `failed`), `created` (unix seconds), `refunded` | 1,617 |
+| `gateway_subscriptions.csv` | `id`, `customer_email`, `status` (`active`, `past_due`, `canceled`), `canceled_at` | 296 |
+| `billing_invoices.csv` | a billing system export: `invoiceid`, `userid`, `serviceid`, `email` (case not normalized), `status` (`Paid`, `Unpaid`, `Cancelled`, `Refunded`), `total` as decimal, `duedate` as DD/MM/YYYY, `datepaid` (`0000-00-00 00:00:00` when unpaid), `notes` | 1,601 |
+| `billing_services.csv` | `serviceid`, `userid`, `domain`, `status` (`Active`, `Suspended`, `Terminated`), `nextduedate` (YYYY-MM-DD), `billingcycle` (`Monthly`, `Quarterly`, `Annually`), `gateway_subscription` (empty for services billed outside the gateway) | 280 |
+
+The row counts came out higher than the 1 November targets (about 1,200 / 1,300 / 300 / 1,100 / 280); the leaks are unchanged. `serviceid` on invoices and `gateway_subscription` on services were added so the checks are answerable from the files alone. The exact rule for each check is written into `answer_key.json` under `definitions`, and `tests/reference.py` (an independent pandas solution, never shown to the model) must reproduce the key: `pytest tests/test_datagen.py`.
 
 ## Seeded leaks (the answer key)
 
