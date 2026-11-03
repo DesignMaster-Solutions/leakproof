@@ -1,0 +1,6 @@
+# 2026-11-03T17:02:19Z on leakproof: python -m leakproof.evaluate (glm-5.3 planner+coder, seed 20261103)
+{"check": "1", "column": "invoice_id", "expected": 27, "rows": 27, "found": ["in_05e1hnQddoxukA", "in_4szvi8GSJ9Ei7f", "in_4vkooiaTTkSEWU", "in_58hTJJ0Nn7R34N", "in_6H37o6T0jJQxnj", "in_9UEtXwwpzxFZTN", "... 27 total"], "missed": [], "extra": [], "pass": true, "run": "20261103T170226Z-72ad5732", "attempts": 1, "rerun_same_hashes": true}
+{"check": "2", "column": "serviceid", "expected": 1, "rows": 1, "found": ["5013"], "missed": [], "extra": [], "pass": true, "run": "20261103T170239Z-48719c9f", "attempts": 1, "rerun_same_hashes": true}
+{"check": "3", "column": "serviceid", "expected": 4, "rows": 4, "found": ["5014", "5015", "5016", "5017"], "missed": [], "extra": [], "pass": true, "run": "20261103T170250Z-a03ffdd9", "attempts": 1, "rerun_same_hashes": true}
+{"check": "4", "column": "invoiceid", "expected": 4, "rows": 4, "found": ["10223", "10224", "10225", "10226"], "missed": [], "extra": [], "pass": true, "run": "20261103T170305Z-7ceec161", "attempts": 1, "rerun_same_hashes": true}
+{"check": "5", "column": "invoice_id", "expected": 2, "rows": 4, "found": ["in_9DYwuZKXd2HVkQ", "in_suJoLvcAsEuZuQ"], "missed": [], "extra": [], "decoys_reported": [], "pass": true, "run": "20261103T170344Z-c810a14c", "attempts": 2, "rerun_same_hashes": true}
