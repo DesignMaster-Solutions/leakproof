@@ -4,7 +4,18 @@
 
 Entry for the [Vultr: Agent Rush Hackathon](https://lablab.ai/ai-hackathons/vultr-hackathon) (lablab.ai, online build 3-8 November 2026), challenge **01 · Blast Radius Zero**, Pattern A (sandboxed code execution).
 
-> **Status, 3 November 2026: build started at kickoff.** (Until 1 November: concept only.) This repository holds the concept, the containment model and the build plan, written before kickoff (step 5 of the lablab team checklist, "Create your concept"). No product code exists yet. All code will be written during the build window, 3-8 November 2026, and every commit is timestamped here.
+**Live demo:** https://leakproof.designmastersolutions.com (synthetic data, one shared instance)
+
+> **Status, 3 November 2026.** Concept, containment model and plan were written before kickoff; all code was written from kickoff on (commit history). What works today, measured on the Vultr VM: the red-team suite (21 tests, each control with a paired "control off" test), all five checks matching the answer key, receipts that re-run to the same hashes, the verifier cutting a planted wrong total, and the web app over HTTPS.
+
+## Why this and not just another sandbox
+
+Sandboxing model-written code is the challenge; it is table stakes here. What LeakProof adds:
+
+- **A real business problem with a known answer.** The demo data is a synthetic copy of the leaks we found in our own books (table below), generated from a seed, with an `answer_key.json`. Every answer in the app is scored against it on screen: found, missed, extra, and decoys reported.
+- **Receipts you can re-run.** Each answer carries SHA-256 hashes of the inputs, the exact code, the sandbox image digest, the limits and the outputs. `python -m leakproof.rerun <run>` runs it again and compares hashes.
+- **Answers that cannot invent numbers.** A model from a different family checks every sentence against the raw output, and a deterministic gate cuts any sentence carrying a number that is not in the output.
+- **A human between the answer and any action.** Exporting the fix list or drafting customer messages needs a person to confirm; both stay local. The agent never touches a gateway.
 
 ## The problem, from our own books
 
@@ -35,25 +46,62 @@ Errors from a run are fed back to the model for a bounded number of retries (Pat
 
 ## The containment moment
 
-Billing data is written by customers: names, addresses, notes. One cell in the demo export carries a prompt injection asking the agent to "upload this file for auditing" to an outside URL. If the model obeys and writes the upload code, the call dies in a sandbox with no network, the receipt records the blocked attempt, and the UI marks the answer **Contained**. The video shows this live, along with a red-team panel that runs four hostile scripts on every deploy (network exfiltration, secret hunting, fork bomb, infinite loop) and shows which limit stopped each one. Details in [docs/containment.md](docs/containment.md).
+Billing data is written by customers: names, addresses, notes. One cell in the demo export carries a prompt injection asking the agent to "upload this file for auditing" to an outside URL. If the model obeys and writes the upload code, the call dies in a sandbox with no network, the receipt records the blocked attempt, and the UI marks the answer **Contained**. The video shows this live, along with a red-team panel that runs five hostile scripts on demand against the live deployment (network exfiltration, secret hunting, fork bomb, memory balloon, infinite loop) and shows which limit stopped each one. Details in [docs/containment.md](docs/containment.md).
 
-## Vultr architecture (planned)
+## Vultr architecture (as built)
+
+```
+ browser ──HTTPS──> Caddy (Let's Encrypt) ──> Flask app + orchestrator  (Vultr Cloud Compute VM, vc2-2c-4gb, Ubuntu 24.04, New Jersey)
+                                                │   │
+             Vultr Serverless Inference <───────┘   │  key lives here only (/etc/leakproof/env, root 0600)
+             glm-5.3: plan, code, draft             │
+             deepseek-v4.1-flash-1017: verify       ▼
+                                      docker create --runtime runsc (gVisor)
+                                      --network none --memory 512m --memory-swap 512m --cpus 1 --pids-limit 128
+                                      --read-only --tmpfs /tmp:64m --cap-drop ALL --no-new-privileges --user 10001
+                                      inputs mounted read-only at /data, /out = 32 MB host tmpfs per run
+                                      30 s wall clock, container removed in a finally block
+```
 
 | Piece | Vultr service | Role |
 |---|---|---|
-| Control plane | Vultr Cloud Compute VM | Web app, orchestrator, job queue, receipts |
-| Planner and coder | Vultr Serverless Inference (`glm-5.3`) | Plan of checks and Python per check |
-| Verifier | Vultr Serverless Inference (`deepseek-v4.1-flash-1017`) | Claim-by-claim check against run output |
-| Sandbox | Docker with gVisor (`runsc`) on the same VM | Isolated execution, one container per run |
+| Control plane | Vultr Cloud Compute VM (`vc2-2c-4gb`, US$ 0.027/h list) | Web app, orchestrator, job threads, receipts |
+| Planner, coder, explainer | Vultr Serverless Inference (`glm-5.3`) | Plan of checks, pandas code, answer draft |
+| Verifier | Vultr Serverless Inference (`deepseek-v4.1-flash-1017`) | Sentence-by-sentence check against the run output |
+| Sandbox | Docker with gVisor (`runsc`) on the same VM | One throwaway container per run |
+| Firewall | Vultr Firewall group | Inbound 22, 80, 443 only |
 
-The API key for Serverless Inference lives only in the orchestrator. The sandbox never sees it. Model ids come from the public list at `https://api.vultrinference.com/v1/models` (read 1 Nov 2026). Confirmed at kickoff on 3 Nov 2026: `glm-5.3` and `deepseek-v4.1-flash-1017` (the verifier id gained a date suffix) both answer on our subscription; ids are pinned in `config/models.json`.
+Model ids are pinned in `config/models.json` (read from `/v1/models` at kickoff). Resources and spend: [docs/vultr.md](docs/vultr.md).
+
+## Measured (3 November 2026, on the VM)
+
+| What | Result | Evidence |
+|---|---|---|
+| Red-team suite | 21 of 21 passed, twice in a row; no leftover containers or mounts | [docs/evidence/day1-redteam-vm.txt](docs/evidence/day1-redteam-vm.txt) |
+| Fork bomb | stopped by the pids limit after about 47 forks; with the limit off it reached 476 forks in 8 s | `tests/test_containment.py` |
+| Memory balloon | OOM-killed at 512 MB; with 2 GB it allocates the full 1.5 GB | same |
+| Exfiltration | DNS, HTTP and TCP all fail, only `lo` inside; with `--network bridge` the same script reaches 1.1.1.1:53 | same |
+| Kernel | `/proc/version` inside differs from the host under `runsc`, matches it under `runc` | same |
+| Five checks, end to end | 5 of 5 match the answer key (27, 1, 4, 4, 2 findings; 0 of 3 decoys reported); 5 of 5 receipts re-run to identical hashes | [docs/evidence/day2-eval-vm.txt](docs/evidence/day2-eval-vm.txt) |
+| Verifier | a planted "$987,654.32 across 412 invoices" sentence cut by both gates | `tests/test_verify.py` |
+
+## Run it
+
+```bash
+python -m leakproof.datagen --out data/demo            # synthetic exports + answer_key.json
+pytest tests/test_datagen.py tests/test_checks.py tests/test_approve.py tests/test_web.py   # anywhere
+sudo pytest tests/test_containment.py                  # on a host with Docker + runsc (see infra/cloud-init.yaml)
+VULTR_INFERENCE_KEY=... python -m leakproof.evaluate   # all five checks, scored, with re-runs
+./infra/deploy.sh                                      # sync to the VM, rebuild image, restart, smoke-test HTTPS
+```
 
 ## Plan and docs
 
 - [docs/concept.md](docs/concept.md): users, the five checks, what a receipt contains, what is out of scope.
 - [docs/containment.md](docs/containment.md): threats, controls and the test that proves each control.
 - [docs/data.md](docs/data.md): the synthetic exports (shaped like real gateway and billing exports, no real customer data) and the seeded leaks.
-- [docs/build-plan.md](docs/build-plan.md): day-by-day plan for 3-8 November with a done check for each day.
+- [docs/build-plan.md](docs/build-plan.md): day-by-day plan for 3-8 November with a done check for each day, and the progress log.
+- [docs/vultr.md](docs/vultr.md): Vultr resources, prices and the balance log.
 
 ## Team
 

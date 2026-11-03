@@ -17,3 +17,4 @@ The VM is provisioned by `infra/cloud-init.yaml` (Docker CE, gVisor `runsc` from
 | 2026-11-03 16:40 | -200.00 (credit) | 0.00 |
 | 2026-11-03 16:58 | -200.00 (credit) | 0.03 |
 | 2026-11-03 17:11 | -200 0.03 (credit) |  |
+| 2026-11-03 17:38 | -200 (credit) | 0.03 |

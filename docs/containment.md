@@ -1,6 +1,6 @@
 # Containment model
 
-Written 1 November 2026, before the build window. Each control below has a test that must fail before the control exists and pass after it. The red-team panel in the app runs the same four hostile scripts against the live deployment.
+Written 1 November 2026, before the build window. Each control below has a test that must fail before the control exists and pass after it. The red-team panel in the app runs the same hostile scripts against the live deployment (four planned; five as built, with a memory balloon added).
 
 ## What we assume
 

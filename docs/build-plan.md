@@ -33,3 +33,4 @@ Times in UTC. Build window: 3 Nov 16:00 to 8 Nov 23:00 (lablab schedule). Each d
 | Mon 3 Nov | Done 16:58. Red-team suite 21/21 on the VM, twice; no leftover containers or mounts | `docs/evidence/day1-redteam-vm.txt` |
 | Tue 4 Nov | Done early, 3 Nov 17:03. Checks 1-5 match the answer key from the command line; all five receipts re-run to the same hashes | `docs/evidence/day2-eval-vm.txt` |
 | Wed 5 Nov | Done early, 3 Nov 17:15. Check 5: 2 found, 0 of 3 decoys; planted wrong total cut by both verifier gates; app live at https://leakproof.designmastersolutions.com | verifier test on the VM; screenshots taken on an iPad mini |
+| Thu 6 Nov | Done early, 3 Nov 17:40. Red-team panel live: 5 of 5 contained, 0 containers left; approval gate (export with formula escaping, local drafts) and reset | iPad mini screenshots; `tests/test_approve.py`, `tests/test_web.py` (formula escaping tested in code, not yet opened in a spreadsheet app) |
