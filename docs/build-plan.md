@@ -25,3 +25,11 @@ Times in UTC. Build window: 3 Nov 16:00 to 8 Nov 23:00 (lablab schedule). Each d
 - The gift code arrives at kickoff. Until then no Vultr resources exist. The Vultr account is already open (1 Nov 2026) and the hackathon promo billing page (`console.vultr.com/billing/?promo=HACKATHON`) offers "Gift Code" as the verification method, so kickoff does not wait on a card.
 - gVisor on a small VM can be slow to start containers; if a run takes too long to start, keep gVisor and pre-warm one container per run slot, never fall back to the default runtime.
 - Model ids on Serverless Inference can change; read `/v1/models` at kickoff and pin the ids in config.
+
+## Progress log
+
+| Day | Status (UTC) | Evidence |
+|---|---|---|
+| Mon 3 Nov | Done 16:58. Red-team suite 21/21 on the VM, twice; no leftover containers or mounts | `docs/evidence/day1-redteam-vm.txt` |
+| Tue 4 Nov | Done early, 3 Nov 17:03. Checks 1-5 match the answer key from the command line; all five receipts re-run to the same hashes | `docs/evidence/day2-eval-vm.txt` |
+| Wed 5 Nov | Done early, 3 Nov 17:15. Check 5: 2 found, 0 of 3 decoys; planted wrong total cut by both verifier gates; app live at https://leakproof.designmastersolutions.com | verifier test on the VM; screenshots taken on an iPad mini |
