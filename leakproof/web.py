@@ -10,7 +10,9 @@ from pathlib import Path
 
 from flask import Flask, abort, jsonify, request, send_file, send_from_directory
 
-from leakproof import agent, checks, datagen, llm, sandbox, verify
+from concurrent.futures import ThreadPoolExecutor
+
+from leakproof import agent, approve, checks, datagen, llm, sandbox, verify
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE = Path(sandbox.RUNS_DIR).parent
@@ -140,8 +142,7 @@ def ask():
 
 @app.get("/api/jobs/<jid>")
 def job(jid):
-    if not re.fullmatch(r"[0-9a-f]{12}", jid) or not (JOBS / f"{jid}.json").exists():
-        abort(404)
+    load_job(jid)
     return send_file(JOBS / f"{jid}.json", mimetype="application/json", max_age=0)
 
 
@@ -156,6 +157,103 @@ def run_file(run_id, name):
     # Served as plain text / attachment, never as HTML.
     return send_file(p, mimetype="text/plain; charset=utf-8", as_attachment=name.endswith(".csv"),
                      download_name=f"{run_id}-{Path(name).name}")
+
+
+REDTEAM = [  # script, what it tries, what should stop it
+    ("network_exfil.py", "Send the customer file out (DNS, HTTP, raw TCP)", "network"),
+    ("secret_hunt.py", "Find the inference key (env, /proc, filesystem)", "secrets"),
+    ("fork_bomb.py", "Fork until the host runs out of processes", "pids"),
+    ("memory_balloon.py", "Grab 1.5 GB of RAM", "oom"),
+    ("infinite_loop.py", "Spin forever", "timeout"),
+]
+
+
+def redteam_card(script, goal, expect):
+    r = sandbox.run((ROOT / "redteam" / script).read_text(), {"customers.csv": str(ROOT / "tests" / "fixtures" / "tiny.csv")})
+    out = r["stdout"].strip().splitlines()[-1:] or [""]
+    if expect == "network":
+        try:
+            res = json.loads(out[0])
+        except ValueError:
+            res = {}
+        tries = {k: v for k, v in res.items() if k != "interfaces"}
+        stopped = bool(tries) and all(str(v).startswith("blocked") for v in tries.values())
+        verdict = f"network none: {len(r['blocked'])} attempts blocked, interfaces {res.get('interfaces')}"
+    elif expect == "secrets":
+        try:
+            found = json.loads(out[0])["found"]
+        except (ValueError, KeyError):
+            found = None
+        stopped = found == []
+        verdict = "nothing to find: empty environment, no mounted secrets" if stopped else f"found {found}"
+    else:
+        stopped = r["killed_by"] == expect
+        verdict = {"pids": f"pids limit ({r['limits']['pids']}) hit {r.get('pids_limit_hits', 0)} times",
+                   "oom": f"memory limit ({r['limits']['memory_mb']} MB): OOM-killed",
+                   "timeout": f"wall clock ({r['limits']['wall_s']} s): killed"}[expect] if stopped else f"killed_by={r['killed_by']}"
+    return {"script": script, "goal": goal, "stopped": stopped, "verdict": verdict, "killed_by": r["killed_by"],
+            "blocked": r["blocked"][:6], "runtime": r["runtime"], "duration_ms": r["duration_ms"], "run_id": r["run_id"],
+            "exit_code": r["exit_code"], "code": (ROOT / "redteam" / script).read_text()}
+
+
+def redteam_work(job):
+    try:
+        with ThreadPoolExecutor(len(REDTEAM)) as ex:
+            futs = [ex.submit(redteam_card, *x) for x in REDTEAM]
+            for f in futs:
+                job["cards"].append(f.result())
+                save_job(job)
+        job["leftover_containers"] = len(sandbox._docker("ps", "-aq", "--filter", "label=leakproof=run").stdout.split())
+        job["status"] = "done"
+    except Exception as e:
+        job.update(status="error", error=f"{type(e).__name__}: {e}"[:500])
+    save_job(job)
+
+
+@app.post("/api/redteam")
+def redteam():
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "").split(",")[0].strip()
+    if not rate_ok(ip):
+        abort(429, "demo limit: 20 runs per hour")
+    job = {"id": uuid.uuid4().hex[:12], "kind": "redteam", "status": "running", "cards": [], "created": time.time(),
+           "expected": [{"script": s, "goal": g} for s, g, _ in REDTEAM]}
+    save_job(job)
+    threading.Thread(target=redteam_work, args=(job,), daemon=True).start()
+    return jsonify(job=job["id"])
+
+
+def load_job(jid):
+    if not re.fullmatch(r"[0-9a-f]{12}", jid or "") or not (JOBS / f"{jid}.json").exists():
+        abort(404)
+    return json.loads((JOBS / f"{jid}.json").read_text())
+
+
+@app.post("/api/jobs/<jid>/approve")
+def approve_action(jid):
+    """A person clicked and confirmed. The output is a local file; the agent sends nothing."""
+    body = request.get_json(force=True)
+    action, job_ = body.get("action"), load_job(jid)
+    if action not in ("export", "drafts") or job_.get("status") != "done" or not job_.get("run_id"):
+        abort(400)
+    if not body.get("confirmed"):
+        abort(400, "approval needs confirmation")
+    result = sandbox.RUNS_DIR / job_["run_id"] / "out" / "result.csv"
+    job_.setdefault("approvals", []).append({"action": action, "at": time.time()})
+    save_job(job_)
+    if action == "export":
+        return app.response_class(approve.fix_list_csv(result), mimetype="text/csv",
+                                  headers={"Content-Disposition": f"attachment; filename=fix-list-{job_['run_id']}.csv"})
+    return jsonify(approve.draft_messages(result, job_["question"]))
+
+
+@app.post("/api/reset")
+def reset():
+    """Forget an uploaded dataset. The demo dataset is regenerated from its seed if missing."""
+    ds = (request.get_json(force=True) or {}).get("dataset", "")
+    if re.fullmatch(r"[0-9a-f]{12}", ds) and (DATASETS / ds).is_dir():
+        shutil.rmtree(DATASETS / ds)
+    demo_dir()
+    return jsonify(ok=True)
 
 
 @app.after_request

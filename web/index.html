@@ -32,7 +32,7 @@
         <p class="hint">Up to 6 files, 10 MB each. They are read only inside the sandbox.</p>
         <div id="upProg" class="prog" hidden><span></span></div>
       </div>
-      <p class="hint">Demo data is synthetic (seed 20261103) with planted leaks and an answer key. No real customer data.</p>
+      <p class="hint">Demo data is synthetic (seed 20261103) with planted leaks and an answer key. No real customer data. <button class="link" id="reset">Reset</button></p>
     </div>
 
     <div class="panel">
@@ -43,6 +43,12 @@
         <button class="btn" type="submit">Ask</button>
       </form>
       <label class="check"><input type="checkbox" id="plant"> Plant a wrong total in the draft (watch the verifier cut it)</label>
+    </div>
+
+    <div class="panel">
+      <h2><span class="n">3</span> Red team</h2>
+      <p class="hint" style="margin:0 0 10px">Five hostile scripts run in the same sandbox your questions use. Each card shows the limit that stopped it.</p>
+      <button class="btn" id="rtGo" type="button">Run the hostile scripts</button>
     </div>
 
     <div class="panel" id="how">
@@ -60,6 +66,13 @@
   <section class="col-right">
     <div id="empty" class="panel empty">
       <p>Pick a question. The answer arrives with the code that produced it, the table, and a receipt.</p>
+    </div>
+
+    <div id="rt" hidden>
+      <div class="panel">
+        <h2>Red team <span id="rtSub" class="sub"></span></h2>
+        <div id="cards" class="cards"></div>
+      </div>
     </div>
 
     <div id="job" hidden>
@@ -85,6 +98,14 @@
       <div class="panel" id="codeP" hidden>
         <h2>Code that ran <span class="sub">written by the model, untrusted</span></h2>
         <pre id="code" class="code"></pre>
+      </div>
+
+      <div class="panel" id="apprP" hidden>
+        <h2>Act on it <span class="sub">needs a person; nothing leaves this page</span></h2>
+        <label class="check"><input type="checkbox" id="reviewed"> I reviewed the <span id="apprN"></span> findings above</label>
+        <div class="acts"><button class="btn" id="aExport" type="button" disabled>Export fix list</button><button class="link" id="aDrafts" type="button" disabled>Draft customer messages</button></div>
+        <p class="hint">The export escapes spreadsheet formulas (cells starting with = + - @). Drafts are text for you to edit and send yourself.</p>
+        <textarea id="drafts" class="drafts" readonly hidden></textarea>
       </div>
 
       <aside class="receipt" id="rcpt" hidden>

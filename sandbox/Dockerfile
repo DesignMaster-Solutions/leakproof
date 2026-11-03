@@ -1,5 +1,5 @@
 # The image every untrusted run uses. No secrets, no network tools, non-root.
-FROM python:3.12-slim
+FROM 
 RUN pip install --no-cache-dir "pandas==2.2.3" && \
     rm -rf /root/.cache && \
     useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin runner

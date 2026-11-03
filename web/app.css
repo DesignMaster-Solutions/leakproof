@@ -91,3 +91,20 @@ tr:nth-child(even) td{background:#f4f6f8}
 .grid>section{min-width:0}
 .answer,.cuts,.jq,.files li span{overflow-wrap:anywhere}
 @media (max-width:1024px){.grid{grid-template-columns:minmax(0,1fr)}}
+.acts{display:flex;gap:14px;align-items:center;flex-wrap:nowrap;margin:10px 0 4px}
+.acts .link{font:13px var(--mono);white-space:nowrap}
+.btn[disabled],.link[disabled]{opacity:.4;cursor:not-allowed}
+.drafts{width:100%;min-height:220px;margin-top:10px;font:12px/1.5 var(--mono);border:1px solid var(--line);padding:10px;resize:vertical}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{border:1.5px solid var(--ink);padding:12px;position:relative;min-height:150px;background:#fff}
+.card h3{font:700 13px var(--mono);margin:0 0 4px}
+.card .goal{font-size:13px;color:var(--mute);margin:0 0 10px}
+.card .verdict{font:12px var(--mono)}
+.card .meta{font:11px var(--mono);color:var(--mute);margin-top:8px}
+.card.wait{border-style:dashed}
+.card.wait .verdict::after{content:" running…";animation:pulse 1s infinite}
+.card .stamp{position:absolute;right:10px;top:10px;font-size:11px;padding:2px 6px;border-width:2px}
+.card.ok .stamp{color:var(--green);border-color:var(--green)}
+.card.fail .stamp{color:var(--red);border-color:var(--red)}
+.card details{margin-top:8px}.card pre{font:11px var(--mono);white-space:pre-wrap;max-height:160px;overflow:auto;background:var(--ink);color:#e9e6dc;padding:8px}
+@media (max-width:400px){.acts{gap:10px}.acts .btn{padding:9px 10px}}

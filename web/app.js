@@ -1,7 +1,7 @@
 // All model and data output is inserted with textContent, never innerHTML.
 const $ = (id) => document.getElementById(id);
 const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
-let dataset = "demo", cfg = null, poll = null;
+let dataset = "demo", cfg = null, poll = null, currentJob = null;
 
 async function api(path, opts) {
   const r = await fetch(path, opts);
@@ -61,12 +61,12 @@ drop.addEventListener("drop", (e) => upload(e.dataTransfer.files));
 
 $("free").onsubmit = (e) => { e.preventDefault(); const q = $("freeQ").value.trim(); if (q) ask({ question: q }); };
 
-function lock(on) { document.querySelectorAll(".q, .btn").forEach((b) => b.disabled = on); }
+function lock(on) { document.querySelectorAll(".q, #free .btn, #rtGo").forEach((b) => b.disabled = on); }
 
 async function ask(body) {
   clearInterval(poll); lock(true);
-  ["ansP", "tableP", "codeP", "rcpt", "err", "stamp"].forEach((id) => $(id).hidden = true);
-  $("empty").hidden = true; $("job").hidden = false; $("steps").replaceChildren();
+  ["ansP", "tableP", "codeP", "rcpt", "err", "stamp", "apprP", "drafts"].forEach((id) => $(id).hidden = true);
+  $("empty").hidden = true; $("rt").hidden = true; $("job").hidden = false; $("reviewed").checked = false; setAppr(false); $("steps").replaceChildren();
   $("jq").textContent = body.check ? cfg.questions[body.check] : body.question;
   try {
     const { job } = await api("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -104,7 +104,7 @@ function render(j) {
   const done = el("li", null, "done"); done.append(el("span", j.ok ? "Done" : "Stopped after 3 attempts"));
   ol.append(done);
   if (j.verification) renderAnswer(j);
-  if (j.table) renderTable(j);
+  if (j.table) { renderTable(j); currentJob = j.id; $("apprN").textContent = j.table.total; $("apprP").hidden = false; }
   if (j.receipt) renderReceipt(j);
 }
 
@@ -164,4 +164,65 @@ function renderReceipt(j) {
   $("rcpt").hidden = false;
 }
 
-init().then(() => { const m = location.hash.match(/job=([0-9a-f]{12})/); if (m) { $("empty").hidden = true; $("job").hidden = false; watch(m[1]); } });
+init().then(() => {
+  const m = location.hash.match(/job=([0-9a-f]{12})/); if (m) { $("empty").hidden = true; $("job").hidden = false; watch(m[1]); }
+  const r = location.hash.match(/rt=([0-9a-f]{12})/); if (r) { $("empty").hidden = true; $("rt").hidden = false; watchRt(r[1]); }
+});
+
+// --- human approval: both actions stay local -------------------------------
+function setAppr(on) { $("aExport").disabled = !on; $("aDrafts").disabled = !on; }
+$("reviewed").onchange = (e) => setAppr(e.target.checked);
+async function approve(action) {
+  const r = await fetch(`/api/jobs/${currentJob}/approve`, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, confirmed: $("reviewed").checked }) });
+  if (!r.ok) { alert("Approval failed"); return; }
+  if (action === "export") {
+    const url = URL.createObjectURL(await r.blob()); const a = document.createElement("a");
+    a.href = url; a.download = `fix-list-${currentJob}.csv`; a.click(); URL.revokeObjectURL(url);
+  } else {
+    const d = await r.json(); const t = $("drafts");
+    t.value = d.count ? d.text : `No findings with an email address (${d.of} rows).`; t.hidden = false;
+  }
+}
+$("aExport").onclick = () => approve("export");
+$("aDrafts").onclick = () => approve("drafts");
+
+$("reset").onclick = async () => {
+  await fetch("/api/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dataset }) });
+  location.href = "/";
+};
+
+// --- red team ---------------------------------------------------------------
+$("rtGo").onclick = async () => {
+  clearInterval(poll); lock(true);
+  $("empty").hidden = true; $("job").hidden = true; $("rt").hidden = false;
+  try { const { job } = await api("/api/redteam", { method: "POST" }); history.replaceState(null, "", `#rt=${job}`); watchRt(job); }
+  catch (e) { $("rtSub").textContent = e.message; lock(false); }
+};
+
+function watchRt(id) {
+  const tick = async () => {
+    let j; try { j = await api(`/api/jobs/${id}`); } catch (e) { return; }
+    renderRt(j);
+    if (j.status !== "running") { clearInterval(poll); lock(false); }
+  };
+  tick(); poll = setInterval(tick, 1500);
+}
+
+function renderRt(j) {
+  const box = $("cards"); box.replaceChildren();
+  const byName = Object.fromEntries(j.cards.map((c) => [c.script, c]));
+  j.expected.forEach((e) => {
+    const c = byName[e.script];
+    const card = el("div", null, `card ${c ? (c.stopped ? "ok" : "fail") : "wait"}`);
+    card.append(el("h3", e.script), el("p", e.goal, "goal"));
+    if (c) {
+      card.append(el("span", c.stopped ? "Contained" : "Escaped", "stamp"), el("div", c.verdict, "verdict"),
+        el("div", `runtime ${c.runtime} · exit ${c.exit_code} · ${(c.duration_ms / 1000).toFixed(1)} s`, "meta"));
+      const d = el("details"); d.append(el("summary", "script"), el("pre", c.code)); card.append(d);
+    } else card.append(el("div", "", "verdict"));
+    box.append(card);
+  });
+  const n = j.cards.filter((c) => c.stopped).length;
+  $("rtSub").textContent = j.status === "done" ? `${n} of ${j.expected.length} contained · containers left behind: ${j.leftover_containers}` : "running";
+}
