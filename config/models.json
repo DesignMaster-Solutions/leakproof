@@ -1,0 +1,7 @@
+{
+  "base_url": "https://api.vultrinference.com/v1",
+  "planner": "glm-5.3",
+  "coder": "glm-5.3",
+  "verifier": "deepseek-v4.1-flash-1017",
+  "checked": "2026-11-03T16:42Z, GET /v1/models + one chat completion each"
+}

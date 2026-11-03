@@ -4,7 +4,7 @@
 
 Entry for the [Vultr: Agent Rush Hackathon](https://lablab.ai/ai-hackathons/vultr-hackathon) (lablab.ai, online build 3-8 November 2026), challenge **01 · Blast Radius Zero**, Pattern A (sandboxed code execution).
 
-> **Status, 1 November 2026: concept only.** This repository holds the concept, the containment model and the build plan, written before kickoff (step 5 of the lablab team checklist, "Create your concept"). No product code exists yet. All code will be written during the build window, 3-8 November 2026, and every commit is timestamped here.
+> **Status, 3 November 2026: build started at kickoff.** (Until 1 November: concept only.) This repository holds the concept, the containment model and the build plan, written before kickoff (step 5 of the lablab team checklist, "Create your concept"). No product code exists yet. All code will be written during the build window, 3-8 November 2026, and every commit is timestamped here.
 
 ## The problem, from our own books
 
@@ -43,10 +43,10 @@ Billing data is written by customers: names, addresses, notes. One cell in the d
 |---|---|---|
 | Control plane | Vultr Cloud Compute VM | Web app, orchestrator, job queue, receipts |
 | Planner and coder | Vultr Serverless Inference (`glm-5.3`) | Plan of checks and Python per check |
-| Verifier | Vultr Serverless Inference (`deepseek-v4.1-flash`) | Claim-by-claim check against run output |
+| Verifier | Vultr Serverless Inference (`deepseek-v4.1-flash-1017`) | Claim-by-claim check against run output |
 | Sandbox | Docker with gVisor (`runsc`) on the same VM | Isolated execution, one container per run |
 
-The API key for Serverless Inference lives only in the orchestrator. The sandbox never sees it. Model ids come from the public list at `https://api.vultrinference.com/v1/models` (read 1 Nov 2026) and will be confirmed at kickoff.
+The API key for Serverless Inference lives only in the orchestrator. The sandbox never sees it. Model ids come from the public list at `https://api.vultrinference.com/v1/models` (read 1 Nov 2026). Confirmed at kickoff on 3 Nov 2026: `glm-5.3` and `deepseek-v4.1-flash-1017` (the verifier id gained a date suffix) both answer on our subscription; ids are pinned in `config/models.json`.
 
 ## Plan and docs
 

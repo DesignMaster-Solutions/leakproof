@@ -45,7 +45,7 @@ Check 5 is deliberately strict: duplicates are matched by invoice or order id, n
   "killed_by": null,
   "blocked": [],
   "duration_ms": 0,
-  "models": {"planner": "glm-5.3", "verifier": "deepseek-v4.1-flash"},
+  "models": {"planner": "glm-5.3", "verifier": "deepseek-v4.1-flash-1017"},
   "outputs": [{"name": "result.csv", "sha256": "..."}]
 }
 ```
