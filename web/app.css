@@ -103,8 +103,10 @@ tr:nth-child(even) td{background:#f4f6f8}
 .card .meta{font:11px var(--mono);color:var(--mute);margin-top:8px}
 .card.wait{border-style:dashed}
 .card.wait .verdict::after{content:" running…";animation:pulse 1s infinite}
-.card .stamp{position:absolute;right:10px;top:10px;font-size:11px;padding:2px 6px;border-width:2px}
+.card .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.card .stamp{font-size:11px;padding:2px 6px;border-width:2px}
 .card.ok .stamp{color:var(--green);border-color:var(--green)}
 .card.fail .stamp{color:var(--red);border-color:var(--red)}
 .card details{margin-top:8px}.card pre{font:11px var(--mono);white-space:pre-wrap;max-height:160px;overflow:auto;background:var(--ink);color:#e9e6dc;padding:8px}
 @media (max-width:400px){.acts{gap:10px}.acts .btn{padding:9px 10px}}
+.top{scroll-margin-top:0}#job,#rt{scroll-margin-top:70px}

@@ -66,7 +66,8 @@ function lock(on) { document.querySelectorAll(".q, #free .btn, #rtGo").forEach((
 async function ask(body) {
   clearInterval(poll); lock(true);
   ["ansP", "tableP", "codeP", "rcpt", "err", "stamp", "apprP", "drafts"].forEach((id) => $(id).hidden = true);
-  $("empty").hidden = true; $("rt").hidden = true; $("job").hidden = false; $("reviewed").checked = false; setAppr(false); $("steps").replaceChildren();
+  $("empty").hidden = true; $("rt").hidden = true; $("job").hidden = false; $("reviewed").checked = false; setAppr(false);
+  $("job").scrollIntoView({ behavior: "smooth", block: "start" }); $("steps").replaceChildren();
   $("jq").textContent = body.check ? cfg.questions[body.check] : body.question;
   try {
     const { job } = await api("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" },
@@ -195,7 +196,7 @@ $("reset").onclick = async () => {
 // --- red team ---------------------------------------------------------------
 $("rtGo").onclick = async () => {
   clearInterval(poll); lock(true);
-  $("empty").hidden = true; $("job").hidden = true; $("rt").hidden = false;
+  $("empty").hidden = true; $("job").hidden = true; $("rt").hidden = false; $("rt").scrollIntoView({ behavior: "smooth", block: "start" });
   try { const { job } = await api("/api/redteam", { method: "POST" }); history.replaceState(null, "", `#rt=${job}`); watchRt(job); }
   catch (e) { $("rtSub").textContent = e.message; lock(false); }
 };
@@ -215,9 +216,11 @@ function renderRt(j) {
   j.expected.forEach((e) => {
     const c = byName[e.script];
     const card = el("div", null, `card ${c ? (c.stopped ? "ok" : "fail") : "wait"}`);
-    card.append(el("h3", e.script), el("p", e.goal, "goal"));
+    const hd = el("div", null, "hd"); hd.append(el("h3", e.script));
+    if (c) hd.append(el("span", c.stopped ? "Contained" : "Escaped", "stamp"));
+    card.append(hd, el("p", e.goal, "goal"));
     if (c) {
-      card.append(el("span", c.stopped ? "Contained" : "Escaped", "stamp"), el("div", c.verdict, "verdict"),
+      card.append(el("div", c.verdict, "verdict"),
         el("div", `runtime ${c.runtime} · exit ${c.exit_code} · ${(c.duration_ms / 1000).toFixed(1)} s`, "meta"));
       const d = el("details"); d.append(el("summary", "script"), el("pre", c.code)); card.append(d);
     } else card.append(el("div", "", "verdict"));
