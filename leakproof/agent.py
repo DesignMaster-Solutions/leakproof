@@ -38,11 +38,12 @@ def extract_code(text):
     return max(m, key=len) if m else text
 
 
-def ask(question, data_dir, files=None):
+def ask(question, data_dir, files=None, on_step=lambda *a: None):
     data_dir = Path(data_dir)
     files = files or sorted(p.name for p in data_dir.glob("*.csv"))
     schema = describe(data_dir, files)
     models = {"planner": llm.CONFIG["planner"], "coder": llm.CONFIG["coder"]}
+    on_step("plan", "Planning the checks")
     plan = llm.chat(models["planner"], [
         {"role": "system", "content": "You plan data reconciliation checks over billing exports. Reply with a numbered plan of 3-7 short steps: which files, how to normalize ids/dates/amounts/case, which joins and filters. No code."},
         {"role": "user", "content": f"Today is {AS_OF}.\nQuestion: {question}\n\nFiles:\n{schema}"}], effort="medium")
@@ -51,8 +52,10 @@ def ask(question, data_dir, files=None):
     attempts = []
     inputs = {n: str(data_dir / n) for n in files}
     for i in range(MAX_ATTEMPTS):
+        on_step("code", f"Writing code (attempt {i + 1})", plan=plan["content"])
         reply = llm.chat(models["coder"], msgs, max_tokens=8000, effort="medium")
         code = extract_code(reply["content"])
+        on_step("run", f"Running in the gVisor sandbox (attempt {i + 1})", code=code)
         r = sandbox.run(code, inputs)
         ok = r["exit_code"] == 0 and r["killed_by"] is None and any(o["name"] == "result.csv" for o in r["outputs"])
         attempts.append({"attempt": i + 1, "code_sha256": r["code_sha256"], "run_id": r["run_id"], "exit_code": r["exit_code"],

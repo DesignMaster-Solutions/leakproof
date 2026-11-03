@@ -1,0 +1,15 @@
+[Unit]
+Description=LeakProof web app and orchestrator
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+WorkingDirectory=/opt/leakproof
+EnvironmentFile=/etc/leakproof/env
+# One worker: job threads and the sandbox slot semaphore live in one process.
+ExecStart=/opt/leakproof/.venv/bin/gunicorn -w 1 --threads 8 -b 127.0.0.1:8000 --timeout 120 leakproof.web:app
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target

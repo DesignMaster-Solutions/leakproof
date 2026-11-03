@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LeakProof · revenue leaks found by contained code, with receipts</title>
+<meta name="description" content="Upload your gateway and billing exports, ask a question, get a reconciliation computed by model-written code that ran in a gVisor sandbox with no network, plus a receipt anyone can re-run.">
+<link rel="stylesheet" href="/static/app.css">
+<!-- avoid-ai-design-ignore: SD5 (step numbers 1 and 2 are wayfinding, house rule) -->
+<style>:focus-visible{outline:2px solid #111316;outline-offset:2px}</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111'/%3E%3Cpath d='M9 7v18h14' stroke='%23e8ff3a' stroke-width='4' fill='none'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="/"><span class="mark-l">L</span>LeakProof</a>
+  <p class="tag">Finds revenue leaks in your billing exports without letting your data leak.</p>
+  <nav><a href="#how">How it works</a><a href="https://github.com/DesignMaster-Solutions/leakproof" rel="noopener">Source</a></nav>
+</header>
+
+<main class="grid">
+  <section class="col-left">
+    <div class="panel">
+      <h2><span class="n">1</span> Data</h2>
+      <div class="seg" role="tablist">
+        <button class="seg-b on" data-ds="demo" role="tab">Demo exports</button>
+        <button class="seg-b" data-ds="upload" role="tab">Your CSVs</button>
+      </div>
+      <ul id="files" class="files"></ul>
+      <div id="drop" class="drop" hidden>
+        <input id="fileIn" type="file" accept=".csv" multiple hidden>
+        <p><strong>Drop CSV files here</strong> or <button class="link" id="pick">choose files</button></p>
+        <p class="hint">Up to 6 files, 10 MB each. They are read only inside the sandbox.</p>
+        <div id="upProg" class="prog" hidden><span></span></div>
+      </div>
+      <p class="hint">Demo data is synthetic (seed 20261103) with planted leaks and an answer key. No real customer data.</p>
+    </div>
+
+    <div class="panel">
+      <h2><span class="n">2</span> Question</h2>
+      <div id="qs" class="qs"></div>
+      <form id="free" class="free">
+        <input id="freeQ" maxlength="1000" placeholder="Or ask your own question about these files">
+        <button class="btn" type="submit">Ask</button>
+      </form>
+      <label class="check"><input type="checkbox" id="plant"> Plant a wrong total in the draft (watch the verifier cut it)</label>
+    </div>
+
+    <div class="panel" id="how">
+      <h2>How a question becomes a number you can trust</h2>
+      <ol class="how">
+        <li><b>Plan and code.</b> <span id="mPlanner"></span> on Vultr Serverless Inference plans the checks and writes pandas code.</li>
+        <li><b>Contained run.</b> A fresh gVisor container on our Vultr VM: no network, no secrets, read-only inputs, <span id="lims"></span>. Destroyed after the run.</li>
+        <li><b>Retry.</b> Errors go back to the coder, three attempts at most.</li>
+        <li><b>Verify.</b> <span id="mVerifier"></span>, a different model family, checks every sentence against the raw output; a sentence with a number not in the output is cut too.</li>
+        <li><b>Receipt.</b> Hashes of inputs, code, image and outputs. Re-run it and get the same numbers.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="col-right">
+    <div id="empty" class="panel empty">
+      <p>Pick a question. The answer arrives with the code that produced it, the table, and a receipt.</p>
+    </div>
+
+    <div id="job" hidden>
+      <div class="panel">
+        <div class="qhead"><p id="jq" class="jq"></p><span id="stamp" class="stamp" hidden>Contained</span></div>
+        <ol id="steps" class="steps"></ol>
+        <p id="err" class="err" hidden></p>
+      </div>
+
+      <div class="panel" id="ansP" hidden>
+        <h2>Answer <span class="sub">verified sentence by sentence</span></h2>
+        <p id="answer" class="answer"></p>
+        <div id="score" class="score" hidden></div>
+        <details id="cutD"><summary>What the verifier checked (<span id="cutN"></span>)</summary><ul id="cuts" class="cuts"></ul></details>
+      </div>
+
+      <div class="panel" id="tableP" hidden>
+        <h2>Findings <span id="tcount" class="sub"></span></h2>
+        <div class="tw"><table id="tbl"></table></div>
+        <p class="links"><a id="dlCsv" href="#">Download result.csv</a></p>
+      </div>
+
+      <div class="panel" id="codeP" hidden>
+        <h2>Code that ran <span class="sub">written by the model, untrusted</span></h2>
+        <pre id="code" class="code"></pre>
+      </div>
+
+      <aside class="receipt" id="rcpt" hidden>
+        <div class="r-head"><b>LEAKPROOF</b><span>RUN RECEIPT</span></div>
+        <dl id="rcptBody"></dl>
+        <p class="r-foot"><a id="dlRcpt" href="#">receipt.json</a> · <a id="dlCode" href="#">main.py</a> · re-run: <code>python -m leakproof.rerun &lt;run&gt;</code></p>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Built for the Vultr Agent Rush hackathon (lablab.ai), November 2026, by Design Master Solutions LLC. Runs on Vultr Cloud Compute and Vultr Serverless Inference.</p>
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
