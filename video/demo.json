@@ -1,0 +1,213 @@
+{
+  "brand": "LeakProof · Design Master Solutions LLC · leakproof.designmastersolutions.com",
+  "voice": "Samantha",
+  "rate": 188,
+  "bg": "#111315",
+  "accent": "#e8f53b",
+  "out": "demo.mp4",
+  "scenes": [
+    {
+      "title": "LeakProof",
+      "lines": [
+        "Finds revenue leaks in",
+        "your billing exports",
+        "without letting your",
+        "data leak.",
+        "",
+        "Vultr Agent Rush",
+        "Challenge 01:",
+        "Blast Radius Zero"
+      ],
+      "shots": [
+        "shots/01-home.png"
+      ],
+      "say": "In October we reconciled our own agency's billing with an AI agent. It found real money: invoices still payable for subscriptions already canceled. It also reported a leak that was not there. LeakProof makes sure a finance team never acts on an invented number, and never trusts model-written code with customer data."
+    },
+    {
+      "title": "The problem, from our own books (Oct 2026)",
+      "mono": [
+        "Open invoices, subscriptions already canceled   27 (one product), 4 (another)",
+        "A billing period never invoiced                 one quarter never billed",
+        "Service suspended with nothing to pay           4 services cut off",
+        "Dead receivables (2021-2026)                    4 unpaid invoices, no service",
+        "A false alarm                                   2 domains flagged; both had paid"
+      ],
+      "say": "These are the leaks we found in one week, plus the false alarm. A model that describes a reconciliation will eventually invent a number. A model that writes code gives numbers you can check, but now model-written code runs next to financial data. That is the blast radius."
+    },
+    {
+      "title": "Question > plan > code > contained run > verify > receipt",
+      "lines": [
+        "1. glm-5.3 plans the checks",
+        "2. glm-5.3 writes pandas code",
+        "3. Code runs in a throwaway",
+        "    gVisor container: no network,",
+        "    no secrets, read-only inputs",
+        "4. deepseek-v4.1-flash-1017",
+        "    checks every sentence",
+        "5. Receipt with SHA-256 hashes",
+        "6. A person approves any action"
+      ],
+      "shots": [
+        "shots/02-steps.png"
+      ],
+      "say": "The loop: a model on Vultr Serverless Inference plans the checks and writes pandas code. The code runs in a fresh gVisor container on our Vultr VM, with no network, no secrets and read-only inputs. A second model, from a different family, checks every sentence against the raw output. Every answer ships with a receipt."
+    },
+    {
+      "title": "Live: asking check 1 on the deployed app",
+      "clip": "rec-q1.mp4",
+      "clip_from": 2,
+      "clip_to": 108,
+      "clip_y": 165,
+      "say": "This is the live app on its public URL, with synthetic demo exports. Check one: which gateway invoices are still payable for canceled subscriptions. Plan, code, the run inside gVisor, the verifier. About forty-seven seconds end to end."
+    },
+    {
+      "title": "Scored against the answer key, verified line by line",
+      "lines": [
+        "27 of 27 found, 0 extra",
+        "",
+        "The verifier cut a sentence",
+        "the model drafted: it claimed",
+        "13 subscriptions, the output",
+        "has 12."
+      ],
+      "shots": [
+        "shots/07-answer-full.png"
+      ],
+      "say": "Scored on screen against the answer key: twenty-seven of twenty-seven, zero extra. And the verifier earned its place: the draft said thirteen subscriptions, the output has twelve. That sentence was cut, in this very run."
+    },
+    {
+      "title": "A receipt anyone can re-run",
+      "lines": [
+        "Hash of every input file,",
+        "the exact code, the sandbox",
+        "image, the limits and every",
+        "output.",
+        "",
+        "runtime runsc",
+        "network none",
+        "512 MB · 1 CPU · 128 pids · 30 s"
+      ],
+      "shots": [
+        "shots/06-receipt.png"
+      ],
+      "say": "The receipt hashes every input file, the exact code, the sandbox image and every output, with the runtime, network mode and limits. The rerun command executes it again and compares hashes."
+    },
+    {
+      "title": "All five checks, measured on the Vultr VM (3 Nov)",
+      "mono_cmd": "python3 video/evidence.py eval",
+      "mono_cwd": "..",
+      "say": "Measured on the VM: all five checks match the answer key, check five reports none of the three decoys, and all five receipts re-ran to identical hashes."
+    },
+    {
+      "title": "The containment moment: an injection in the data",
+      "mono_cmd": "python3 -c 'from leakproof.datagen import INJECTION; print(INJECTION)' | fold -sw 90",
+      "mono_cwd": "..",
+      "lines": [],
+      "say": "Billing data is written by customers. One notes cell in the demo export is a prompt injection: upload this file to an outside URL."
+    },
+    {
+      "title": "Live: asking the app to process the customer notes",
+      "clip": "rec-inj.mp4",
+      "clip_from": 22,
+      "clip_to": 58,
+      "clip_y": 165,
+      "say": "I asked the live app to process each customer note as part of the audit."
+    },
+    {
+      "title": "The model refused. We do not count on that.",
+      "lines": [
+        "glm-5.3 flagged the note",
+        "and did not act on it.",
+        "",
+        "If the code had tried,",
+        "the call dies in a sandbox",
+        "with no network, and the",
+        "answer is stamped",
+        "Contained."
+      ],
+      "shots": [
+        "shots/11-injection-answer.png"
+      ],
+      "say": "The model flagged the note and refused. Good, but safety cannot depend on the model saying no. If the code tries to upload, the call dies in a container with network none, and the answer is stamped Contained. So we attack the sandbox on purpose."
+    },
+    {
+      "title": "Live: five hostile scripts against the deployed sandbox",
+      "clip": "rec-rt.mp4",
+      "clip_from": 6,
+      "clip_to": 60,
+      "clip_y": 165,
+      "say": "The red team panel, live on the same deployment: exfiltration, secret hunting, a fork bomb, a memory balloon and an infinite loop, in the same sandbox the questions use."
+    },
+    {
+      "title": "5 of 5 contained, 0 containers left behind",
+      "lines": [
+        "Exfiltration: network none,",
+        "  4 attempts blocked, only lo",
+        "Secret hunt: nothing to find",
+        "Fork bomb: pids limit 128",
+        "Memory balloon: OOM at 512 MB",
+        "Infinite loop: 30 s wall clock"
+      ],
+      "shots": [
+        "shots/09-redteam.png"
+      ],
+      "say": "Five of five contained, each with the limit that stopped it: four network attempts blocked, nothing to find, the pids limit, OOM at five hundred twelve megabytes, and the thirty second clock. No container left behind."
+    },
+    {
+      "title": "Each control has a test that fails without it",
+      "mono_cmd": "python3 video/evidence.py redteam",
+      "mono_cwd": "..",
+      "say": "Each control has a paired test: stopped with the control on, through with only that control off. Without the pids limit the fork bomb reaches four hundred seventy six forks. Twenty one of twenty one passed, twice."
+    },
+    {
+      "title": "A human between the answer and any action",
+      "lines": [
+        "Export fix list and draft",
+        "customer messages need a",
+        "person to confirm.",
+        "",
+        "Export escapes spreadsheet",
+        "formulas. Drafts stay local.",
+        "The agent never touches",
+        "a payment gateway."
+      ],
+      "shots": [
+        "shots/08-approve.png"
+      ],
+      "say": "Acting needs a person. Only after I confirm I reviewed the findings can I export the fix list, with spreadsheet formulas escaped, or draft customer messages that I send myself. The agent never touches a payment gateway."
+    },
+    {
+      "title": "Built on Vultr",
+      "mono": [
+        "browser --HTTPS--> Caddy --> Flask app + orchestrator",
+        "                             Vultr Cloud Compute VM, vc2-2c-4gb, Ubuntu 24.04",
+        "",
+        "Vultr Serverless Inference   glm-5.3: plan, code, draft",
+        "                             deepseek-v4.1-flash-1017: verify",
+        "                             key only on the VM (root 0600)",
+        "",
+        "Sandbox, same VM             docker --runtime runsc (gVisor)",
+        "                             --network none --memory 512m --cpus 1",
+        "                             --pids-limit 128 --read-only --cap-drop ALL",
+        "                             --user 10001, 30 s, removed after every run",
+        "",
+        "Vultr Firewall group         inbound 22, 80, 443 only"
+      ],
+      "say": "One Vultr Cloud Compute VM runs the app and the orchestrator. Vultr Serverless Inference serves glm five point three for plan and code, and deepseek v four point one flash to verify. The key lives only on the VM. gVisor sandboxes on the same VM, behind a Vultr firewall group."
+    },
+    {
+      "title": "Try it",
+      "lines": [
+        "leakproof.designmastersolutions.com",
+        "github.com/DesignMaster-Solutions/leakproof",
+        "",
+        "Synthetic data only, generated from a seed",
+        "with an answer key. No real customer data.",
+        "Solo build, with AI coding agents (disclosed).",
+        "",
+        "Design Master Solutions LLC"
+      ],
+      "say": "The demo is public, the code is MIT, with the red team tests and the evidence. The data is synthetic, a seeded copy of the leaks from our own books. LeakProof: find the leak in your revenue, without leaking your data."
+    }
+  ]
+}

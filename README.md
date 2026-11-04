@@ -6,6 +6,8 @@ Entry for the [Vultr: Agent Rush Hackathon](https://lablab.ai/ai-hackathons/vult
 
 **Live demo:** https://leakproof.designmastersolutions.com (synthetic data, one shared instance)
 
+**Demo video (3:58):** https://youtu.be/Gg3qlGzH1pU (recorded on the live deployment: check 1 end to end, the receipt, the prompt-injection note, the red-team panel with 5 of 5 contained, human approval) · **lablab submission:** https://lablab.ai/ai-hackathons/vultr-hackathon/design-master-solutions/leakproof
+
 > **Status, 3 November 2026.** Concept, containment model and plan were written before kickoff; all code was written from kickoff on (commit history). What works today, measured on the Vultr VM: the red-team suite (21 tests, each control with a paired "control off" test), all five checks matching the answer key, receipts that re-run to the same hashes, the verifier cutting a planted wrong total, and the web app over HTTPS.
 
 ## Why this and not just another sandbox

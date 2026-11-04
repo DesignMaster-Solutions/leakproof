@@ -29,7 +29,7 @@ Vultr, Vultr Cloud Compute, Vultr Serverless Inference, GLM, DeepSeek, gVisor, D
 
 - Public GitHub repository: https://github.com/DesignMaster-Solutions/leakproof
 - Demo application URL: https://leakproof.designmastersolutions.com
-- Video presentation: (YouTube URL, added when published)
+- Video presentation: https://youtu.be/Gg3qlGzH1pU (same mp4 uploaded to the lablab form)
 - Slide presentation: docs/submission/slides.pdf (11 pages, 16:9)
 - Cover image: docs/submission/cover.png (1920x1080, page 1 of the deck)
 - Challenge: 01 · Blast Radius Zero, Pattern A (sandboxed code execution)
